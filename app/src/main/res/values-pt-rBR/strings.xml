@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">trab3</string>
+    <string name="calories">Calorias</string>
+    <string name="protein">Proteina</string>
+    <string name="carbs">Carboidratos</string>
+    <string name="fat">Gordura</string>
+    <string name="send">Enviar</string>
+    <string name="clear">Limpar</string>
+    <string name="insertFood">Inserir comida</string>
+    <string name="insertFoodDiet">Adicionar comida</string>
+    <string name="food_name">Nome</string>
+    <string name="name">Nome</string>
+    <string name="height">Altura</string>
+    <string name="weight">Peso</string>
+    <string name="age">Idade</string>
+    <string name="invalid_numeric_values">Numero invalido detectado</string>
+    <string name="fields_mandatory">Todos os campos são mandatórios</string>
+    <string name="percent_100">Porcentagens precisam somar 100%</string>
+    <string name="create_diet">Criar dieta</string>
+</resources>

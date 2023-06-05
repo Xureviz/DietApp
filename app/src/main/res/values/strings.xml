@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">trab3</string>
+    <string name="protein">Protein</string>
+    <string name="carbs">Carbs</string>
+    <string name="fat">Fat</string>
+    <string name="calories">Calories</string>
+    <string name="send">Send</string>
+    <string name="clear">Clear</string>
+    <string name="insertFood">Insert Food</string>
+    <string name="insertFoodDiet">Add food</string>
+    <string name="food_name">Name</string>
+    <string name="name">Name</string>
+    <string name="height">Height</string>
+    <string name="weight">Weight</string>
+    <string name="age">Age</string>
+    <string name="invalid_numeric_values">Invalid numeric value detected</string>
+    <string name="fields_mandatory">All fields are mandatory</string>
+    <string name="percent_100">Percentages must sum up to 100%</string>
+    <string name="create_diet">Create diet</string>
+</resources>
