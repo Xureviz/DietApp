@@ -12,7 +12,8 @@ import com.example.trab3.entities.EntityDiet
 class DietListAdapter(
     private val context: Activity,
     var diets: List<EntityDiet>,
-    private val onDeleteClickListener: OnDeleteClickListener
+    private val onDeleteClickListener: OnDeleteClickListener,
+    private val itemClickListener: OnItemClickListener
 ) : RecyclerView.Adapter<DietListAdapter.DietViewHolder>() {
 
     inner class DietViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -38,6 +39,7 @@ class DietListAdapter(
     override fun onBindViewHolder(holder: DietViewHolder, position: Int) {
         val diet = diets[position]
         holder.titleText.text = diet.name
+        holder.itemView.setOnClickListener { itemClickListener.onItemClick(position) }
     }
 
     override fun getItemCount(): Int {
@@ -47,6 +49,10 @@ class DietListAdapter(
     fun updateDiets(newDiets: List<EntityDiet>) {
         diets = newDiets
         notifyDataSetChanged()
+    }
+
+    interface OnItemClickListener {
+        fun onItemClick(position: Int)
     }
 
     interface OnDeleteClickListener {
