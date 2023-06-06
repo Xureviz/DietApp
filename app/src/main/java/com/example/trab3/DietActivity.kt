@@ -1,5 +1,7 @@
 package com.example.trab3
 
+import DietListAdapter
+import android.app.Activity
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -12,6 +14,7 @@ import android.widget.RadioGroup
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.recyclerview.widget.RecyclerView
 import com.example.trab3.database.AppDatabase
 import com.example.trab3.entities.EntityDiet
 import kotlinx.coroutines.CoroutineScope
@@ -33,6 +36,7 @@ class DietActivity : AppCompatActivity() {
         val calculateButton: Button = findViewById(R.id.calculate_button)
         val editHeight: EditText = findViewById(R.id.editTextText7)
         val editWeight: EditText = findViewById(R.id.editTextText8)
+        val editName: EditText = findViewById(R.id.editTextText6)
         val editAge: EditText = findViewById(R.id.editTextText10)
         val spinnerProtein: Spinner = findViewById(R.id.spinnerProtein)
         val spinnerCarbs: Spinner = findViewById(R.id.spinnerCarbs)
@@ -45,7 +49,7 @@ class DietActivity : AppCompatActivity() {
 
         var saveButtonClicked = false
 
-        fun calculateBasalCalories() {
+        fun calculateBasalCalories(name: String) {
             val heightText: String = editHeight.text.toString()
             val weightText: String = editWeight.text.toString()
             val ageText: String = editAge.text.toString()
@@ -70,7 +74,7 @@ class DietActivity : AppCompatActivity() {
 
                     textViewCalories.text = "Basal Calories: $basalCalories"
                     val entityDiet = EntityDiet(
-                        name = selectedSex,
+                        name = name,
                         weight = weight,
                         height = height,
                         calories = basalCalories,
@@ -79,7 +83,7 @@ class DietActivity : AppCompatActivity() {
                         fat = selectedFat
                     )
                     if (saveButtonClicked){
-                        saveDietToDatabase(entityDiet)
+                        saveDietToDatabase(name, entityDiet)
                     }
                 } else {
                     showToast("Invalid numeric value detected for height or weight")
@@ -139,27 +143,34 @@ class DietActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
         calculateButton.setOnClickListener {
+            val name: String = editName.text.toString()
             saveButtonClicked = false
-            calculateBasalCalories()
+            calculateBasalCalories(name)
         }
         buttonSave.setOnClickListener {
+            val name: String = editName.text.toString()
             saveButtonClicked = true
-            calculateBasalCalories()
+            calculateBasalCalories(name)
+            finish()
         }
     }
 
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
-    fun saveDietToDatabase(entityDiet: EntityDiet) {
+    fun saveDietToDatabase(name: String, entityDiet: EntityDiet) {
         val dietDao = AppDatabase.getDatabase(this).dietDao()
         CoroutineScope(Dispatchers.IO).launch {
-            dietDao.insert(entityDiet)
+            val dietWithPersonName = entityDiet.copy(name = name)
+            dietDao.insert(dietWithPersonName)
             withContext(Dispatchers.Main) {
                 showToast("Diet Saved Successfully!")
+                setResult(Activity.RESULT_OK)
+                finish()
             }
         }
     }
+
 
 
 }
