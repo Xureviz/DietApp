@@ -61,9 +61,6 @@ class DietActivity : AppCompatActivity() {
                     findViewById<TextView>(R.id.editTextText7).text = diet?.height.toString()
                     findViewById<TextView>(R.id.editTextText8).text = diet?.weight.toString()
                     findViewById<TextView>(R.id.editTextText10).text = diet?.age.toString()
-//                    findViewById<Spinner>(R.id.spinnerProtein).setSelection(diet?.protein ?: 0)
-//                    findViewById<Spinner>(R.id.spinnerCarbs).setSelection(diet?.carbs ?: 0)
-//                    findViewById<Spinner>(R.id.spinnerFat).setSelection(diet?.fat ?: 0)
                     findViewById<TextView>(R.id.textView).text = diet?.calories.toString()
                     val radioGroupSex: RadioGroup = findViewById(R.id.radioGroupSex)
                     if (diet?.sex == "Male") {
@@ -78,51 +75,76 @@ class DietActivity : AppCompatActivity() {
         }
         var saveButtonClicked = false
 
-        fun calculateBasalCalories(name: String) {
-            val heightText: String = editHeight.text.toString()
-            val weightText: String = editWeight.text.toString()
-            val ageText: String = editAge.text.toString()
+        fun calculateBasalCalories(existingDiet: EntityDiet?) {
+            val name = findViewById<TextView>(R.id.editTextText6).text.toString()
+            val weight = findViewById<TextView>(R.id.editTextText8).text.toString().toDoubleOrNull()
+            val height = findViewById<TextView>(R.id.editTextText7).text.toString().toDoubleOrNull()
+            val age = findViewById<TextView>(R.id.editTextText10).text.toString().toIntOrNull()
 
-            if (heightText.isNotEmpty() && weightText.isNotEmpty()) {
-                val height: Double? = heightText.toDoubleOrNull()
-                val weight: Double? = weightText.toDoubleOrNull()
-                val age: Int? = ageText.toIntOrNull()
+            if (name.isNotEmpty() && weight != null && height != null && age != null) {
+                val selectedSex = when (findViewById<RadioGroup>(R.id.radioGroupSex).checkedRadioButtonId) {
+                    R.id.radioButtonMale -> "Male"
+                    R.id.radioButtonFemale -> "Female"
+                    else -> ""
+                }
 
-                if (height != null && weight != null) {
-                    val selectedSex = when (radioGroupSex.checkedRadioButtonId) {
-                        R.id.radioButtonMale -> "Male"
-                        R.id.radioButtonFemale -> "Female"
-                        else -> ""
-                    }
+                val basalCalories: Double = when (selectedSex) {
+                    "Male" -> 66.47 + (13.75 * weight) + (5.003 * height) - (6.755 * age)
+                    "Female" -> 655.1 + (9.563 * weight) + (1.85 * height) - (4.676 * age)
+                    else -> 0.0
+                }
 
-                    val basalCalories: Double = when (selectedSex) {
-                        "Male" -> 66.47 + (13.75 * weight) + (5.003 * height) - (6.755 * (age ?: 0))
-                        "Female" -> 655.1 + (9.563 * weight) + (1.85 * height) - (4.676 * (age ?: 0))
-                        else -> 0.0
-                    }
-
-                    textViewCalories.text = "Basal Calories: $basalCalories"
-                    val entityDiet = EntityDiet(
+                if (existingDiet != null) {
+                    // Update the existing diet with the new data
+                    val updatedDiet = existingDiet.copy(
                         name = name,
                         weight = weight,
                         height = height,
-                        age = age!!,
-                        sex = selectedSex,
+                        age = age,
                         calories = basalCalories,
+                        sex = selectedSex,
                         protein = selectedProtein,
                         carbs = selectedCarbs,
                         fat = selectedFat
                     )
-                    if (saveButtonClicked){
-                        saveDietToDatabase(name, entityDiet)
+
+                    // Perform the update operation in the database
+                    CoroutineScope(Dispatchers.IO).launch {
+                        database.dietDao().update(updatedDiet)
+                        withContext(Dispatchers.Main) {
+                            showToast("Diet updated successfully!")
+                            setResult(Activity.RESULT_OK)
+                            finish()
+                        }
                     }
                 } else {
-                    showToast("Invalid numeric value detected for height or weight")
+                    // It's a new diet, perform the insert operation in the database
+                    val newDiet = EntityDiet(
+                        name = name,
+                        weight = weight,
+                        height = height,
+                        age = age,
+                        calories = basalCalories,
+                        sex = selectedSex,
+                        protein = selectedProtein,
+                        carbs = selectedCarbs,
+                        fat = selectedFat
+                    )
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        database.dietDao().insert(newDiet)
+                        withContext(Dispatchers.Main) {
+                            showToast("Diet saved successfully!")
+                            setResult(Activity.RESULT_OK)
+                            finish()
+                        }
+                    }
                 }
             } else {
-                showToast("Fields should not be empty")
+                showToast("Please fill in all the fields")
             }
         }
+
         val percentages = (0..100).filter { it % 5 == 0 }.map { "$it%" }
 
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, percentages)
@@ -176,25 +198,16 @@ class DietActivity : AppCompatActivity() {
         calculateButton.setOnClickListener {
             val name: String = editName.text.toString()
             saveButtonClicked = false
-            calculateBasalCalories(name)
+            calculateBasalCalories(diet)
         }
         buttonSave.setOnClickListener {
             val name: String = editName.text.toString()
             saveButtonClicked = true
-            calculateBasalCalories(name)
+            calculateBasalCalories(diet)
             finish()
         }
     }
 
-    private fun loadDiet(dietId: Int) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val dietDao = AppDatabase.getDatabase(this@DietActivity).dietDao()
-            val diet = dietDao.getDietById(dietId)
-            withContext(Dispatchers.Main) {
-                // Use diet data to update your UI
-            }
-        }
-    }
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
