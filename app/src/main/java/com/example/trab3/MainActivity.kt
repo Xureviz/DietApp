@@ -9,14 +9,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.trab3.database.AppDatabase
-import com.example.trab3.entities.EntityDiet
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MainActivity : AppCompatActivity(), DietListAdapter.OnDeleteClickListener {
+class MainActivity : AppCompatActivity(), DietListAdapter.OnDeleteClickListener, DietListAdapter.OnItemClickListener {
     companion object {
         private const val ADD_DIET_REQUEST = 1
     }
@@ -31,7 +30,7 @@ class MainActivity : AppCompatActivity(), DietListAdapter.OnDeleteClickListener 
 
         recyclerView = findViewById(R.id.recyclerview)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        dietListAdapter = DietListAdapter(this, emptyList(), this)
+        dietListAdapter = DietListAdapter(this, emptyList(), this, this)
         recyclerView.adapter = dietListAdapter
 
         database = AppDatabase.getDatabase(this)
@@ -58,6 +57,13 @@ class MainActivity : AppCompatActivity(), DietListAdapter.OnDeleteClickListener 
                 dietListAdapter.updateDiets(diets)
             }
         }
+    }
+    override fun onItemClick(position: Int) {
+        val diet = dietListAdapter.diets[position]
+        val intent = Intent(this, DietActivity::class.java).apply {
+            putExtra("DIET_ID", diet.id)
+        }
+        startActivity(intent)
     }
 
     override fun onDeleteClick(position: Int) {

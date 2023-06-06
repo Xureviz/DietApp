@@ -10,6 +10,8 @@ data class EntityDiet(
     @ColumnInfo(name = "name") val name: String,
     @ColumnInfo(name = "weight") val weight: Double,
     @ColumnInfo(name = "height") val height: Double,
+    @ColumnInfo(name = "age") val age: Int,
+    @ColumnInfo(name = "sex") val sex: String,
     @ColumnInfo(name = "calories") val calories: Double,
     @ColumnInfo(name = "protein") val protein: Int,
     @ColumnInfo(name = "carbs") val carbs: Int,

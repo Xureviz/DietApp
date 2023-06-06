@@ -1,6 +1,5 @@
 package com.example.trab3
 
-import DietListAdapter
 import android.app.Activity
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
@@ -14,7 +13,6 @@ import android.widget.RadioGroup
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
-import androidx.recyclerview.widget.RecyclerView
 import com.example.trab3.database.AppDatabase
 import com.example.trab3.entities.EntityDiet
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +24,9 @@ class DietActivity : AppCompatActivity() {
     private var selectedProtein: Int = 0
     private var selectedCarbs: Int = 0
     private var selectedFat: Int = 0
+    private var diet: EntityDiet? = null
+    private lateinit var database: AppDatabase
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +48,34 @@ class DietActivity : AppCompatActivity() {
         val buttonSave: Button = findViewById(R.id.button3)
         val buttonClear: Button = findViewById(R.id.button4)
 
+        database = AppDatabase.getDatabase(this)
+
+        val dietId = intent.getIntExtra("DIET_ID", -1)
+        if (dietId != -1) {
+            CoroutineScope(Dispatchers.IO).launch {
+                diet = database.dietDao().getDietById(dietId)
+                withContext(Dispatchers.Main) {
+                    showToast("Diet ID: $dietId, name: ${diet?.name}, weight: ${diet?.weight}, height: ${diet?.height}")
+
+                    findViewById<TextView>(R.id.editTextText6).text = diet?.name
+                    findViewById<TextView>(R.id.editTextText7).text = diet?.height.toString()
+                    findViewById<TextView>(R.id.editTextText8).text = diet?.weight.toString()
+                    findViewById<TextView>(R.id.editTextText10).text = diet?.age.toString()
+//                    findViewById<Spinner>(R.id.spinnerProtein).setSelection(diet?.protein ?: 0)
+//                    findViewById<Spinner>(R.id.spinnerCarbs).setSelection(diet?.carbs ?: 0)
+//                    findViewById<Spinner>(R.id.spinnerFat).setSelection(diet?.fat ?: 0)
+                    findViewById<TextView>(R.id.textView).text = diet?.calories.toString()
+                    val radioGroupSex: RadioGroup = findViewById(R.id.radioGroupSex)
+                    if (diet?.sex == "Male") {
+                        radioGroupSex.check(R.id.radioButtonMale)
+                    } else if (diet?.sex == "Female") {
+                        radioGroupSex.check(R.id.radioButtonFemale)
+                    }
+                }
+            }
+        } else {
+            showToast("No diet ID provided!")
+        }
         var saveButtonClicked = false
 
         fun calculateBasalCalories(name: String) {
@@ -77,6 +106,8 @@ class DietActivity : AppCompatActivity() {
                         name = name,
                         weight = weight,
                         height = height,
+                        age = age!!,
+                        sex = selectedSex,
                         calories = basalCalories,
                         protein = selectedProtein,
                         carbs = selectedCarbs,
@@ -155,21 +186,37 @@ class DietActivity : AppCompatActivity() {
         }
     }
 
+    private fun loadDiet(dietId: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val dietDao = AppDatabase.getDatabase(this@DietActivity).dietDao()
+            val diet = dietDao.getDietById(dietId)
+            withContext(Dispatchers.Main) {
+                // Use diet data to update your UI
+            }
+        }
+    }
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
     fun saveDietToDatabase(name: String, entityDiet: EntityDiet) {
         val dietDao = AppDatabase.getDatabase(this).dietDao()
         CoroutineScope(Dispatchers.IO).launch {
-            val dietWithPersonName = entityDiet.copy(name = name)
-            dietDao.insert(dietWithPersonName)
-            withContext(Dispatchers.Main) {
-                showToast("Diet Saved Successfully!")
-                setResult(Activity.RESULT_OK)
-                finish()
+            try {
+                val dietWithPersonName = entityDiet.copy(name = name)
+                dietDao.insert(dietWithPersonName)
+                withContext(Dispatchers.Main) {
+                    showToast("Diet Saved Successfully!")
+                    setResult(Activity.RESULT_OK)
+                    finish()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showToast("Error: ${e.localizedMessage}")
+                }
             }
         }
     }
+
 
 
 

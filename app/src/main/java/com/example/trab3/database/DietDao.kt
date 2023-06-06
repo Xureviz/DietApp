@@ -20,5 +20,8 @@ interface DietDao {
 
     @Delete
     fun delete(diet: EntityDiet)
+
+    @Query("SELECT * FROM diet_table WHERE id = :id")
+    fun getDietById(id: Int): EntityDiet?
 }
 
