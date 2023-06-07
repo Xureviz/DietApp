@@ -4,7 +4,10 @@ import DietListAdapter
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -16,10 +19,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity(), DietListAdapter.OnDeleteClickListener, DietListAdapter.OnItemClickListener {
-    companion object {
-        private const val ADD_DIET_REQUEST = 1
-    }
 
+    private lateinit var resultLauncher: ActivityResultLauncher<Intent>
     private lateinit var recyclerView: RecyclerView
     private lateinit var dietListAdapter: DietListAdapter
     private lateinit var database: AppDatabase
@@ -27,6 +28,13 @@ class MainActivity : AppCompatActivity(), DietListAdapter.OnDeleteClickListener,
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data: Intent? = result.data
+                loadDiets()
+            }
+        }
 
         recyclerView = findViewById(R.id.recyclerview)
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -37,22 +45,16 @@ class MainActivity : AppCompatActivity(), DietListAdapter.OnDeleteClickListener,
 
         val fab: FloatingActionButton = findViewById(R.id.fab)
         fab.setOnClickListener {
-            startActivityForResult(Intent(this, DietActivity::class.java), ADD_DIET_REQUEST)
+            resultLauncher.launch(Intent(this, DietActivity::class.java))
         }
 
         loadDiets()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == ADD_DIET_REQUEST && resultCode == Activity.RESULT_OK) {
-            loadDiets()
-        }
-    }
-
     private fun loadDiets() {
         CoroutineScope(Dispatchers.IO).launch {
             val diets = database.dietDao().getAll()
+            Log.d("MainActivity", "Loaded diets: $diets")
             withContext(Dispatchers.Main) {
                 dietListAdapter.updateDiets(diets)
             }

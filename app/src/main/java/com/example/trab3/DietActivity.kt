@@ -130,14 +130,18 @@ class DietActivity : AppCompatActivity() {
                         carbs = selectedCarbs,
                         fat = selectedFat
                     )
-
-                    CoroutineScope(Dispatchers.IO).launch {
-                        database.dietDao().insert(newDiet)
-                        withContext(Dispatchers.Main) {
-                            showToast("Diet saved successfully!")
-                            setResult(Activity.RESULT_OK)
-                            finish()
+                    if (saveButtonClicked) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            database.dietDao().insert(newDiet)
+                            withContext(Dispatchers.Main) {
+                                showToast("Diet saved successfully!")
+                                setResult(Activity.RESULT_OK)
+                                finish()
+                            }
                         }
+                    } else{
+                        val caloriesTextView = findViewById<TextView>(R.id.textView)
+                        caloriesTextView.text = newDiet.calories.toString()
                     }
                 }
             } else {
@@ -204,7 +208,6 @@ class DietActivity : AppCompatActivity() {
             val name: String = editName.text.toString()
             saveButtonClicked = true
             calculateBasalCalories(diet)
-            finish()
         }
     }
 
